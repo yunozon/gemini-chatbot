@@ -1,8 +1,25 @@
 import streamlit as st
 import google.generativeai as genai
+import time
 import os
 
-st.title('Gemini Chatbot') # タイトルを表示
+# stream機能の設定
+def stream_res():
+    response = model.generate_content(
+        prompt,
+        generation_config=genai.types.GenerationConfig( # 応答生成の設定
+            candidate_count=1,
+            stop_sequences=["x"],
+            max_output_tokens=200,
+            temperature=1.0,
+        ),
+    )
+    for word in response.text.split():
+        yield word + " "
+        time.sleep(0.05)
+
+# ページの設定(1度だけ実行)
+st.set_page_config(page_title="Gemini Chatbot", page_icon=":)", layout="wide", initial_sidebar_state="auto")
 
 genai.configure(api_key=os.environ["GOOGLE_API_KEY"]) # APIキーを設定
 # TODO: モデルを選択変更予定
@@ -25,13 +42,21 @@ if prompt := st.chat_input("Type something..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 応答を生成
-    response = model.generate_content(prompt)
-
+    # # 応答を生成
+    # response = model.generate_content(
+    #     prompt,
+    #     generation_config=genai.types.GenerationConfig( # 応答生成の設定
+    #         candidate_count=1,
+    #         stop_sequences=["x"],
+    #         max_output_tokens=200,
+    #         temperature=1.0,
+    #     ),
+    # ) 
     # 応答を表示
     with st.chat_message("assistant"):
         # st.write_stream(response.text)
-        st.markdown(response.text)
+        response = st.write_stream(stream_res())
     
     # 応答を履歴に追加
-    st.session_state.messages.append({"role": "assistant", "content": response.text})
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
