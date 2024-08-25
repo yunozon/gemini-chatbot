@@ -1,7 +1,4 @@
 .venv/
 gemini-chatbot-env/
-streamlit.py
 .env
 secrets.toml
-sample.py
-streamlit.py
